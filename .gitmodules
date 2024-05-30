@@ -1,0 +1,3 @@
+[submodule "control/communication/mavlink"]
+	path = control/communication/mavlink
+	url = https://github.com/qriwty/mavlink

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <script>
+        function fetchAnalysisData() {
+            fetch('/dashboard/get-analysis')
+                .then(response => {
+                    if (response.status === 401) {
+                        window.location.href = '/auth/login';
+                        return;
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.error) {
+                        console.error('Error fetching analysis:', data.error);
+                        return;
+                    }
+                    document.getElementById('timestamp').textContent = 'Timestamp: ' + data.timestamp;
+
+                    const frameImg = document.getElementById('drone-image');
+                    frameImg.src = 'data:image/jpeg;base64,' + data.image;
+
+                    const detectionsList = document.getElementById('detections-list');
+                    detectionsList.innerHTML = '';
+
+                    data.tracks.forEach(track => {
+                        const li = document.createElement('li');
+                        li.textContent = `Track ID: ${track.track_id}, Class Name: ${track.class_name}, Latitude: ${track.latitude}, Longitude: ${track.longitude}, Altitude: ${track.altitude}`;
+                        detectionsList.appendChild(li);
+                    });
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        }
+
+        setInterval(fetchAnalysisData, 1000 / 30);
+
+        window.onload = fetchAnalysisData;
+    </script>
+    <script>
+        function fetchFlightData() {
+            fetch('/dashboard/get-flight-info')
+                .then(response => {
+                    if (response.status === 401) {
+                        window.location.href = '/auth/login';
+                        return;
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const snapshotsList = document.getElementById('snapshots-list');
+                    snapshotsList.innerHTML = '';
+
+                    data.snapshots.forEach(snapshot => {
+                        const li = document.createElement('li');
+                        li.textContent = `Timestamp: ${snapshot.timestamp}, Latitude: ${snapshot.latitude}, Longitude: ${snapshot.longitude}, Altitude: ${snapshot.altitude}`;
+                        snapshotsList.appendChild(li);
+                    });
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        }
+
+        setInterval(fetchFlightData, 1000 * 5);
+
+        window.onload = fetchFlightData;
+    </script>
+    <script>
+        function startNewFlight() {
+            fetch('/dashboard/start-flight', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('flight-info').innerText = 'Current Flight ID: ' + data.flight_id;
+            })
+            .catch(error => console.error('Error starting new flight:', error));
+        }
+        function stopCurrentFlight() {
+            fetch('/dashboard/stop-flight', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    document.getElementById('flight-info').innerText = data.message;
+                }
+            })
+            .catch(error => console.error('Error stopping flight:', error));
+        }
+    </script>
+</head>
+<body>
+    <h1>Dashboard</h1>
+
+    <div id="analysis_results">
+        <h3 id="timestamp">Timestamp: </h3>
+        <div id="image-block" style="width: 640px; height: 480px;">
+            <img id="drone-image" alt="Drone Image"/>
+        </div>
+        <h2>Detections</h2>
+        <ul id="detections-list" style="height: 100px; overflow-y: scroll;"></ul>
+    </div>
+
+    <div id="flight_info">
+        <h2>Flight Snapshots</h2>
+        <ul id="snapshots-list" style="height: 100px; overflow-y: scroll;"></ul>
+    </div>
+
+    <div class="flight_control">
+        <button onclick="startNewFlight()">Start New Flight</button>
+        <button onclick="stopCurrentFlight()">Stop Current Flight</button>
+        <div id="flight-info"></div>
+    </div>
+
+    <nav>
+        <ul>
+            <li><a href="{{ url_for('profile_bp.profile') }}">Profile</a></li>
+            <li><a href="{{ url_for('navigation_bp.navigation') }}">Navigation</a></li>
+            <li><a href="{{ url_for('settings_bp.settings') }}">Settings</a></li>
+        </ul>
+    </nav>
+</body>
+</html>
