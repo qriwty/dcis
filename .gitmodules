@@ -4,3 +4,6 @@
 [submodule "control/analysis/deep_sort"]
 	path = control/analysis/deep_sort
 	url = https://github.com/qriwty/deep_sort
+[submodule "control/communication/simulation"]
+	path = control/communication/simulation
+	url = https://github.com/qriwty/simulation.git
