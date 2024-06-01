@@ -48,6 +48,8 @@ def add_task(user_id):
 
     arguments = {}
 
+    if 'height' in request.form:
+        arguments['HEIGHT'] = request.form['height']
     if 'roll' in request.form and 'pitch' in request.form and 'yaw' in request.form:
         arguments['ROLL'] = request.form['roll']
         arguments['PITCH'] = request.form['pitch']
@@ -112,10 +114,10 @@ def run_task(user_id, task_id):
                 command_dictionary["COMMAND"] = "SET_ROI"
             elif command_dictionary["COMMAND"] == "GO_TO_OBJECT":
                 command_dictionary["COMMAND"] = "GO_TO"
+                command_dictionary["ARGUMENTS"]['ALTITUDE'] += 15
             elif command_dictionary["CIRCLE_AROUND_OBJECT"]:
                 command_dictionary["COMMAND"] = "CIRCLE_AROUND"
-            elif command_dictionary["POINT_DRONE_OBJECT"]:
-                command_dictionary["COMMAND"] = "POINT_DRONE"
+                command_dictionary["ARGUMENTS"]['ALTITUDE'] += 15
 
         core_service.execute_command(command_dictionary)
 

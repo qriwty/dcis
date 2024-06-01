@@ -84,7 +84,7 @@ class DroneCoreService:
             )
 
         elif command == "POINT_DRONE":
-            pass
+            self.data_service.mavlink_connection.drone.point_drone(arguments["DIRECTION"])
 
     def update_settings(self, detection_threshold, iou_threshold, max_detections, classes_excluded):
         self.analysis_service.detection_threshold = detection_threshold
