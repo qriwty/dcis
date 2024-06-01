@@ -40,43 +40,50 @@ class DroneCoreService:
         command = command_dictionary["COMMAND"]
         arguments = command_dictionary["ARGUMENTS"]
         if command == "ARM":
-            self.data_service.mavlink_connection.drone.arming(True)
+            result = self.data_service.mavlink_connection.drone.arming(True)
 
         elif command == "DISARM":
-            self.data_service.mavlink_connection.drone.arming(False)
+            result = self.data_service.mavlink_connection.drone.arming(False)
 
         elif command == "TAKEOFF":
-            self.data_service.mavlink_connection.drone.takeoff(arguments["ALTITUDE"])
+            result = self.data_service.mavlink_connection.drone.takeoff(
+                float(arguments["HEIGHT"])
+            )
 
         elif command == "LAND":
-            self.data_service.mavlink_connection.drone.land()
+            result = self.data_service.mavlink_connection.drone.land()
+
+        elif command == "SET_MODE":
+            result = self.data_service.mavlink_connection.drone.set_mode(
+                int(arguments["MODE"])
+            )
 
         elif command == "POINT_CAMERA":
-            self.data_service.mavlink_connection.gimbal.set_angles(
+            result = self.data_service.mavlink_connection.gimbal.set_angles(
                 float(arguments["ROLL"]),
                 float(arguments["PITCH"]),
                 float(arguments["YAW"])
             )
 
         elif command == "SET_ROI":
-            self.data_service.mavlink_connection.gimbal.set_roi_location(
+            result = self.data_service.mavlink_connection.gimbal.set_roi_location(
                 float(arguments["LATITUDE"]),
                 float(arguments["LONGITUDE"]),
                 float(arguments["ALTITUDE"])
             )
 
         elif command == "DISABLE_ROI":
-            self.data_service.mavlink_connection.gimbal.disable_roi()
+            result = self.data_service.mavlink_connection.gimbal.disable_roi()
 
         elif command == "GO_TO":
-            self.data_service.mavlink_connection.drone.go_to(
-                float(arguments["LATITUDE"]),
-                float(arguments["LONGITUDE"]),
-                float(arguments["ALTITUDE"])
+            result = self.data_service.mavlink_connection.drone.go_to(
+                int(arguments["LATITUDE"] * 10 ** 7),
+                int(arguments["LONGITUDE"] * 10 ** 7),
+                int(arguments["ALTITUDE"])
             )
 
         elif command == "CIRCLE_AROUND":
-            self.data_service.mavlink_connection.drone.loiter(
+            result = self.data_service.mavlink_connection.drone.loiter(
                 float(arguments["LATITUDE"]),
                 float(arguments["LONGITUDE"]),
                 float(arguments["ALTITUDE"]),
@@ -84,7 +91,19 @@ class DroneCoreService:
             )
 
         elif command == "POINT_DRONE":
-            self.data_service.mavlink_connection.drone.point_drone(arguments["DIRECTION"])
+            result = self.data_service.mavlink_connection.drone.point_drone(
+                float(arguments["DIRECTION"])
+            )
+
+        else:
+            return "FAILED"
+
+        if result.result == 0:
+            return "SUCCESS"
+        elif result.result == 5:
+            return "IN PROGRESS"
+        else:
+            return "FAILED"
 
     def update_settings(self, detection_threshold, iou_threshold, max_detections, classes_excluded):
         self.analysis_service.detection_threshold = detection_threshold

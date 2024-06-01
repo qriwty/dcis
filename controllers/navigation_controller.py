@@ -29,7 +29,8 @@ def get_tasks(user_id):
     flight_id = session.get('flight_id')
 
     tasks = Task.query.filter_by(flight_id=flight_id).all()
-    tasks_data = [{'id': task.id, 'command': task.command, 'status': task.status} for task in tasks]
+
+    tasks_data = [{'id': task.id, 'command': str([eval(task.command)["COMMAND"], ":", eval(task.command)["ARGUMENTS"]]), 'status': task.status} for task in tasks]
     return jsonify({'tasks': tasks_data})
 
 
@@ -48,6 +49,8 @@ def add_task(user_id):
 
     arguments = {}
 
+    if 'mode' in request.form:
+        arguments['MODE'] = request.form['mode']
     if 'height' in request.form:
         arguments['HEIGHT'] = request.form['height']
     if 'roll' in request.form and 'pitch' in request.form and 'yaw' in request.form:
@@ -110,18 +113,22 @@ def run_task(user_id, task_id):
                         command_dictionary["ARGUMENTS"]['LATITUDE'] = point.latitude
                         command_dictionary["ARGUMENTS"]['LONGITUDE'] = point.longitude
                         command_dictionary["ARGUMENTS"]['ALTITUDE'] = point.altitude
-            if command_dictionary["COMMAND"] == "SET_CAMERA_ROI_OBJECT":
+            if command_dictionary["COMMAND"] == "SET_ROI_OBJECT":
                 command_dictionary["COMMAND"] = "SET_ROI"
             elif command_dictionary["COMMAND"] == "GO_TO_OBJECT":
                 command_dictionary["COMMAND"] = "GO_TO"
-                command_dictionary["ARGUMENTS"]['ALTITUDE'] += 15
-            elif command_dictionary["CIRCLE_AROUND_OBJECT"]:
+                command_dictionary["ARGUMENTS"]['ALTITUDE'] += command_dictionary["ARGUMENTS"]['HEIGHT']
+            elif command_dictionary["COMMAND"] == "CIRCLE_AROUND_OBJECT":
                 command_dictionary["COMMAND"] = "CIRCLE_AROUND"
-                command_dictionary["ARGUMENTS"]['ALTITUDE'] += 15
+                command_dictionary["ARGUMENTS"]['ALTITUDE'] += command_dictionary["ARGUMENTS"]['HEIGHT']
 
-        core_service.execute_command(command_dictionary)
+        result = core_service.execute_command(command_dictionary)
 
-        task.status = 2
+        if result == "FAILED":
+            task.status = 3
+        else:
+            task.status = 2
+
         db.session.commit()
 
     return redirect(url_for('navigation_bp.navigation'))

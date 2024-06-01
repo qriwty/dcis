@@ -24,6 +24,7 @@
                                     <option value="0" ${task.status == 0 ? 'selected' : ''}>Pending</option>
                                     <option value="1" ${task.status == 1 ? 'selected' : ''}>In Progress</option>
                                     <option value="2" ${task.status == 2 ? 'selected' : ''}>Completed</option>
+                                    <option value="3" ${task.status == 3 ? 'selected' : ''}>Failed</option>
                                 </select>
                                 <button type="submit">Update</button>
                             </form>
@@ -63,6 +64,10 @@
                     args = `<label for="height">Height:</label>
                             <input type="number" id="height" name="height" required>`;
                     break;
+                case 'SET_MODE':
+                    args = `<label for="mode">Mode:</label>
+                            <input type="number" id="mode" name="mode" required>`;
+                    break;
                 case 'POINT_CAMERA':
                     args = `<label for="roll">Roll:</label>
                             <input type="number" id="roll" name="roll" required>
@@ -71,11 +76,11 @@
                             <label for="yaw">Yaw:</label>
                             <input type="number" id="yaw" name="yaw" required>`;
                     break;
-                case 'SET_CAMERA_ROI_OBJECT':
+                case 'SET_ROI_OBJECT':
                     args = `<label for="object_id">Object ID:</label>
                             <input type="number" id="object_id" name="object_id" required>`;
                     break;
-                case 'SET_CAMERA_ROI_LOCATION':
+                case 'SET_ROI':
                     args = `<label for="lat">Latitude:</label>
                             <input type="number" step="any" id="lat" name="lat" required>
                             <label for="lon">Longitude:</label>
@@ -83,7 +88,7 @@
                             <label for="alt">Altitude:</label>
                             <input type="number" id="alt" name="alt" required>`;
                     break;
-                case 'GO_TO_LOCATION':
+                case 'GO_TO':
                     args = `<label for="lat">Latitude:</label>
                             <input type="number" step="any" id="lat" name="lat" required>
                             <label for="lon">Longitude:</label>
@@ -107,7 +112,7 @@
                             <label for="distance">Distance:</label>
                             <input type="number" id="distance" name="distance" required>`;
                     break;
-                case 'CIRCLE_AROUND_LOCATION':
+                case 'CIRCLE_AROUND':
                     args = `<label for="lat">Latitude:</label>
                             <input type="number" step="any" id="lat" name="lat" required>
                             <label for="lon">Longitude:</label>
@@ -140,16 +145,16 @@
                 <option value="DISARM">DISARM</option>
                 <option value="TAKEOFF">TAKEOFF</option>
                 <option value="LAND">LAND</option>
+                <option value="SET_MODE">SET_MODE</option>
                 <option value="POINT_CAMERA">POINT_CAMERA</option>
-                <option value="SET_CAMERA_ROI_OBJECT">SET_CAMERA_ROI_OBJECT</option>
-                <option value="SET_CAMERA_ROI_LOCATION">SET_CAMERA_ROI_LOCATION</option>
+                <option value="SET_ROI_OBJECT">SET_ROI_OBJECT</option>
+                <option value="SET_ROI">SET_ROI</option>
                 <option value="DISABLE_ROI">DISABLE_ROI</option>
-                <option value="GO_TO_LOCATION">GO_TO</option>
+                <option value="GO_TO">GO_TO</option>
                 <option value="GO_TO_OBJECT">GO_TO_OBJECT</option>
                 <option value="CIRCLE_AROUND_OBJECT">CIRCLE_AROUND_OBJECT</option>
-                <option value="CIRCLE_AROUND_LOCATION">CIRCLE_AROUND_LOCATION</option>
-                <option value="POINT_DRONE_DIRECTION">POINT_DRONE_DIRECTION</option>
-                <option value="POINT_DRONE_OBJECT">POINT_DRONE_OBJECT</option>
+                <option value="CIRCLE_AROUND">CIRCLE_AROUND</option>
+                <option value="POINT_DRONE">POINT_DRONE</option>
             </select>
         </div>
         <div id="command-args"></div>
@@ -166,6 +171,7 @@
                         <option value="0" {% if task.status == 0 %}selected{% endif %}>Pending</option>
                         <option value="1" {% if task.status == 1 %}selected{% endif %}>In Progress</option>
                         <option value="2" {% if task.status == 2 %}selected{% endif %}>Completed</option>
+                        <option value="3" {% if task.status == 3 %}selected{% endif %}>Failed</option>
                     </select>
                     <button type="submit">Update</button>
                 </form>
