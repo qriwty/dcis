@@ -77,9 +77,9 @@ class DroneCoreService:
 
         elif command == "GO_TO":
             result = self.data_service.mavlink_connection.drone.go_to(
-                int(arguments["LATITUDE"] * 10 ** 7),
-                int(arguments["LONGITUDE"] * 10 ** 7),
-                int(arguments["ALTITUDE"])
+                float(arguments["LATITUDE"]),
+                float(arguments["LONGITUDE"]),
+                float(arguments["ALTITUDE"])
             )
 
         elif command == "CIRCLE_AROUND":

@@ -30,7 +30,7 @@ def get_tasks(user_id):
 
     tasks = Task.query.filter_by(flight_id=flight_id).all()
 
-    tasks_data = [{'id': task.id, 'command': str([eval(task.command)["COMMAND"], ":", eval(task.command)["ARGUMENTS"]]), 'status': task.status} for task in tasks]
+    tasks_data = [{'id': task.id, 'command': eval(task.command), 'status': task.status} for task in tasks]
     return jsonify({'tasks': tasks_data})
 
 
@@ -78,13 +78,13 @@ def add_task(user_id):
     return redirect(url_for('navigation_bp.navigation'))
 
 
-@navigation_bp.route('/update/<int:task_id>', methods=['POST'])
+@navigation_bp.route('/delete/<int:task_id>', methods=['POST'])
 @token_required
 @flight_active_required
-def update_task(user_id, task_id):
+def delete_task(user_id, task_id):
     task = Task.query.get(task_id)
     if task:
-        task.status = request.form['status']
+        db.session.delete(task)
         db.session.commit()
 
     return redirect(url_for('navigation_bp.navigation'))

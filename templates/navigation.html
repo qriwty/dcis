@@ -17,18 +17,37 @@
                         const li = document.createElement('li');
                         li.setAttribute('data-task-id', task.id);
 
+                        const command = task.command;
+
+                        let taskDescription = `${command.COMMAND}`;
+                        if (command.ARGUMENTS && Object.keys(command.ARGUMENTS).length > 0) {
+                            for (const [key, value] of Object.entries(command.ARGUMENTS)) {
+                                taskDescription += ` ${key} ${value}`;
+                            }
+                        }
+
+                        let statusText;
+                        switch (task.status) {
+                            case 0:
+                                statusText = "Pending";
+                                break;
+                            case 1:
+                                statusText = "In Progress";
+                                break;
+                            case 2:
+                                statusText = "Completed";
+                                break;
+                            case 3:
+                                statusText = "Failed";
+                                break;
+                            default:
+                                statusText = "Unknown";
+                        }
+
                         li.innerHTML = `
-                            ${task.command} - Status: ${task.status}
-                            <form method="POST" action="/navigation/update/${task.id}">
-                                <select name="status">
-                                    <option value="0" ${task.status == 0 ? 'selected' : ''}>Pending</option>
-                                    <option value="1" ${task.status == 1 ? 'selected' : ''}>In Progress</option>
-                                    <option value="2" ${task.status == 2 ? 'selected' : ''}>Completed</option>
-                                    <option value="3" ${task.status == 3 ? 'selected' : ''}>Failed</option>
-                                </select>
-                                <button type="submit">Update</button>
-                            </form>
+                            ${taskDescription} - Status: ${statusText}
                             <button onclick="runTask(${task.id})">Run Task</button>
+                            <button onclick="deleteTask(${task.id})">Delete Task</button>
                         `;
                         tasksList.appendChild(li);
                     });
@@ -36,7 +55,7 @@
                 .catch(error => console.error('Error fetching tasks:', error));
         }
 
-        setInterval(fetchTasks, 1000 * 3);
+        setInterval(fetchTasks, 1000 / 3);
         window.onload = fetchTasks;
 
         function runTask(taskId) {
@@ -51,6 +70,20 @@
                     }
                 })
                 .catch(error => console.error('Error running task:', error));
+        }
+
+        function deleteTask(taskId) {
+            fetch(`/navigation/delete/${taskId}`, { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Task deleted successfully');
+                        fetchTasks();
+                    } else {
+                        alert('Failed to delete task');
+                    }
+                })
+                .catch(error => console.error('Error deleting task:', error));
         }
 
         function updateCommandInputs() {
@@ -165,17 +198,7 @@
     <ul id="tasks-list">
         {% for task in tasks %}
             <li data-task-id="{{ task.id }}">
-                {{ task.command }} - Status: {{ task.status }}
-                <form method="POST" action="{{ url_for('navigation_bp.update_task', task_id=task.id) }}">
-                    <select name="status">
-                        <option value="0" {% if task.status == 0 %}selected{% endif %}>Pending</option>
-                        <option value="1" {% if task.status == 1 %}selected{% endif %}>In Progress</option>
-                        <option value="2" {% if task.status == 2 %}selected{% endif %}>Completed</option>
-                        <option value="3" {% if task.status == 3 %}selected{% endif %}>Failed</option>
-                    </select>
-                    <button type="submit">Update</button>
-                </form>
-                <button onclick="runTask({{ task.id }})">Run Task</button>
+
             </li>
         {% endfor %}
     </ul>
