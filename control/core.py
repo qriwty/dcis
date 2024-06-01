@@ -40,16 +40,16 @@ class DroneCoreService:
         command = command_dictionary["COMMAND"]
         arguments = command_dictionary["ARGUMENTS"]
         if command == "ARM":
-            pass
+            self.data_service.mavlink_connection.drone.arming(True)
 
         elif command == "DISARM":
-            pass
+            self.data_service.mavlink_connection.drone.arming(False)
 
         elif command == "TAKEOFF":
-            pass
+            self.data_service.mavlink_connection.drone.takeoff(arguments["ALTITUDE"])
 
         elif command == "LAND":
-            pass
+            self.data_service.mavlink_connection.drone.land()
 
         elif command == "POINT_CAMERA":
             self.data_service.mavlink_connection.gimbal.set_angles(
@@ -69,10 +69,19 @@ class DroneCoreService:
             self.data_service.mavlink_connection.gimbal.disable_roi()
 
         elif command == "GO_TO":
-            pass
+            self.data_service.mavlink_connection.drone.go_to(
+                float(arguments["LATITUDE"]),
+                float(arguments["LONGITUDE"]),
+                float(arguments["ALTITUDE"])
+            )
 
         elif command == "CIRCLE_AROUND":
-            pass
+            self.data_service.mavlink_connection.drone.loiter(
+                float(arguments["LATITUDE"]),
+                float(arguments["LONGITUDE"]),
+                float(arguments["ALTITUDE"]),
+                float(arguments["DISTANCE"])
+            )
 
         elif command == "POINT_DRONE":
             pass

@@ -48,8 +48,6 @@ def add_task(user_id):
 
     arguments = {}
 
-    if 'height' in request.form:
-        arguments['HEIGHT'] = request.form['height']
     if 'roll' in request.form and 'pitch' in request.form and 'yaw' in request.form:
         arguments['ROLL'] = request.form['roll']
         arguments['PITCH'] = request.form['pitch']
