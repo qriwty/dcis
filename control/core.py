@@ -1,6 +1,7 @@
 import math
 import threading
 import random
+import time
 
 import cv2
 
@@ -77,17 +78,9 @@ class DroneCoreService:
 
         elif command == "GO_TO":
             result = self.data_service.mavlink_connection.drone.go_to(
-                float(arguments["LATITUDE"]),
-                float(arguments["LONGITUDE"]),
-                float(arguments["ALTITUDE"])
-            )
-
-        elif command == "CIRCLE_AROUND":
-            result = self.data_service.mavlink_connection.drone.loiter(
-                float(arguments["LATITUDE"]),
-                float(arguments["LONGITUDE"]),
-                float(arguments["ALTITUDE"]),
-                float(arguments["DISTANCE"])
+                int(float(arguments["LATITUDE"])* 1e7),
+                int(float(arguments["LONGITUDE"]) * 1e7),
+                int(float(arguments["ALTITUDE"]))
             )
 
         elif command == "POINT_DRONE":
@@ -166,86 +159,98 @@ class DroneCoreService:
 
         return image
 
-    def run_analysis(self):
-        self.running = True
-        while self.running:
-            camera_frame, image_width, image_height, fov_horizontal, fov_vertical = self.get_drone_data()
-            gimbal_data, attitude_data, global_position_data = self.get_mavlink_data()
+    def do_analysis(self):
+        camera_frame, image_width, image_height, fov_horizontal, fov_vertical = self.get_drone_data()
+        gimbal_data, attitude_data, global_position_data = self.get_mavlink_data()
 
-            gimbal_roll, gimbal_pitch, gimbal_yaw = gimbal_data.quaternion.to_euler()
-            analysis_result = {
-                "timestamp": datetime.now(),
-                "drone": {
-                    "location": {
-                        "latitude": global_position_data.latitude,
-                        "longitude": global_position_data.longitude,
-                        "altitude": global_position_data.altitude
-                    },
-                    "attitude": {
-                        "roll": attitude_data.roll,
-                        "pitch": attitude_data.pitch,
-                        "yaw": attitude_data.yaw
-                    },
-                    "camera": {
-                        "frame": camera_frame,
-                        "width": image_width,
-                        "height": image_height,
-                        "fov_horizontal": fov_horizontal,
-                        "fov_vertical": fov_vertical
-                    },
-                    "gimbal": {
-                        "roll": gimbal_roll,
-                        "pitch": gimbal_pitch,
-                        "yaw": gimbal_yaw
-                    }
+        gimbal_roll, gimbal_pitch, gimbal_yaw = gimbal_data.quaternion.to_euler()
+        analysis_result = {
+            "timestamp": datetime.now(),
+            "drone": {
+                "location": {
+                    "latitude": global_position_data.latitude,
+                    "longitude": global_position_data.longitude,
+                    "altitude": global_position_data.altitude
                 },
-                "analysis": {
-                    "tracks": [],
-                    "frame": None
+                "attitude": {
+                    "roll": attitude_data.roll,
+                    "pitch": attitude_data.pitch,
+                    "yaw": attitude_data.yaw
+                },
+                "camera": {
+                    "frame": camera_frame,
+                    "width": image_width,
+                    "height": image_height,
+                    "fov_horizontal": fov_horizontal,
+                    "fov_vertical": fov_vertical
+                },
+                "gimbal": {
+                    "roll": gimbal_roll,
+                    "pitch": gimbal_pitch,
+                    "yaw": gimbal_yaw
+                }
+            },
+            "analysis": {
+                "tracks": [],
+                "frame": None
+            }
+        }
+
+        detections = self.analysis_service.predict(camera_frame)
+
+        tracks = self.analysis_service.update_tracker(camera_frame, detections)
+
+        tracks_locations = self.analysis_service.geospatial_analysis(
+            tracks,
+            image_width, image_height,
+            fov_horizontal, fov_vertical,
+            gimbal_data, attitude_data, global_position_data
+        )
+
+        for track in tracks:
+            x1, y1, x2, y2 = map(int, track.to_tlbr())
+            track_id = track.track_id
+            class_id = track.class_id
+
+            track_latitude, track_longitude, track_altitude = tracks_locations[track_id]
+
+            track_results = {
+                "track_id": track_id,
+                "class_id": class_id,
+                "location": {
+                    "latitude": track_latitude,
+                    "longitude": track_longitude,
+                    "altitude": track_altitude
+                },
+                "frame": {
+                    "x1": x1,
+                    "y1": y1,
+                    "x2": x2,
+                    "y2": y2
                 }
             }
 
-            detections = self.analysis_service.predict(camera_frame)
+            analysis_result["analysis"]["tracks"].append(track_results)
 
-            tracks = self.analysis_service.update_tracker(camera_frame, detections)
+            self.paint_info(camera_frame, [x1, y1, x2, y2], track_id)
 
-            tracks_locations = self.analysis_service.geospatial_analysis(
-                tracks,
-                image_width, image_height,
-                fov_horizontal, fov_vertical,
-                gimbal_data, attitude_data, global_position_data
-            )
+        analysis_result["analysis"]["frame"] = camera_frame
 
-            for track in tracks:
-                x1, y1, x2, y2 = map(int, track.to_tlbr())
-                track_id = track.track_id
-                class_id = track.class_id
+        self.latest = analysis_result
 
-                track_latitude, track_longitude, track_altitude = tracks_locations[track_id]
+    def run_analysis(self):
+        while True:
+            if self.running:
+                try:
+                    self.do_analysis()
+                except Exception:
+                    self.restart_analysis()
+            else:
+                time.sleep(0.1)
 
-                track_results = {
-                    "track_id": track_id,
-                    "class_id": class_id,
-                    "location": {
-                        "latitude": track_latitude,
-                        "longitude": track_longitude,
-                        "altitude": track_altitude
-                    },
-                    "frame": {
-                        "x1": x1,
-                        "y1": y1,
-                        "x2": x2,
-                        "y2": y2
-                    }
-                }
-
-                analysis_result["analysis"]["tracks"].append(track_results)
-
-                self.paint_info(camera_frame, [x1, y1, x2, y2], track_id)
-
-            analysis_result["analysis"]["frame"] = camera_frame
-
-            self.latest = analysis_result
+    def restart_analysis(self):
+        self.analysis_thread = threading.Thread(target=self.run_analysis)
+        self.analysis_thread.start()
 
     def get_analysis(self):
         return self.latest

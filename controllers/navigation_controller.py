@@ -117,10 +117,10 @@ def run_task(user_id, task_id):
                 command_dictionary["COMMAND"] = "SET_ROI"
             elif command_dictionary["COMMAND"] == "GO_TO_OBJECT":
                 command_dictionary["COMMAND"] = "GO_TO"
-                command_dictionary["ARGUMENTS"]['ALTITUDE'] += command_dictionary["ARGUMENTS"]['HEIGHT']
+                command_dictionary["ARGUMENTS"]['ALTITUDE'] = float(command_dictionary["ARGUMENTS"]['HEIGHT'])
             elif command_dictionary["COMMAND"] == "CIRCLE_AROUND_OBJECT":
                 command_dictionary["COMMAND"] = "CIRCLE_AROUND"
-                command_dictionary["ARGUMENTS"]['ALTITUDE'] += command_dictionary["ARGUMENTS"]['HEIGHT']
+                command_dictionary["ARGUMENTS"]['ALTITUDE'] = float(command_dictionary["ARGUMENTS"]['HEIGHT'])
 
         result = core_service.execute_command(command_dictionary)
 
