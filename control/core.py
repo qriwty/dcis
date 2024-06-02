@@ -78,7 +78,7 @@ class DroneCoreService:
 
         elif command == "GO_TO":
             result = self.data_service.mavlink_connection.drone.go_to(
-                int(float(arguments["LATITUDE"])* 1e7),
+                int(float(arguments["LATITUDE"]) * 1e7),
                 int(float(arguments["LONGITUDE"]) * 1e7),
                 int(float(arguments["ALTITUDE"]))
             )
