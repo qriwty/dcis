@@ -56,7 +56,7 @@
 
                     data.snapshots.forEach(snapshot => {
                         const li = document.createElement('li');
-                        li.textContent = `Timestamp: ${snapshot.timestamp}, Latitude: ${snapshot.latitude}, Longitude: ${snapshot.longitude}, Altitude: ${snapshot.altitude}`;
+                        li.textContent = `Timestamp: ${snapshot.timestamp}, Latitude: ${snapshot.latitude}, Longitude: ${snapshot.longitude}, Altitude: ${snapshot.altitude}, Heading: ${snapshot.heading}`;
                         snapshotsList.appendChild(li);
                     });
                 })

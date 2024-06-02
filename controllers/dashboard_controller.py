@@ -95,7 +95,8 @@ def get_flight_info(user_id):
             'timestamp': snapshot.timestamp.isoformat(),
             'latitude': point.latitude,
             'longitude': point.longitude,
-            'altitude': point.altitude
+            'altitude': point.altitude,
+            'heading': snapshot.yaw
         })
 
     return jsonify({'snapshots': snapshots_data})
