@@ -2,6 +2,7 @@ from flask import Flask
 from flask_migrate import Migrate
 from config import Config
 from db import db
+import os
 
 
 migrate = Migrate()
@@ -9,11 +10,11 @@ migrate = Migrate()
 from control import core
 
 core_service = core.DroneCoreService(
-    mavlink_address="udp:0.0.0.0:14550",
-    stream_host="192.168.0.107",
-    stream_port=5588,
-    model_path="control/analysis/yolov8n-visdrone.pt",
-    dem_path="control/analysis/S36E149.hgt"
+    mavlink_address=os.getenv("mavlink_address", "udp:0.0.0.0:14550"),
+    stream_host=os.getenv("camera_host", "192.168.0.107"),
+    stream_port=os.getenv("camera_port", 5588),
+    model_path=os.getenv("model_path", "control/analysis/yolov8n-visdrone.pt"),
+    dem_path=os.getenv("dem_path", "control/analysis/S36E149.hgt")
 )
 
 
